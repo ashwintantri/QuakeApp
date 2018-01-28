@@ -23,7 +23,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +41,7 @@ import java.util.List;
 
 import static com.example.android.quakereport.EarthQuakeUtils.fetchEarthquakeData;
 
-public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Earthquake>> {
+public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Earthquake>>, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int EARTHQUAKE_LOADER_ID = 1;
     private TextView mEmptyTextView;
@@ -47,6 +49,7 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
     private static final String USGS_REQUEST_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query";
     ArrayList<Earthquake> earthquakes = new ArrayList<Earthquake>();
     private EarthquakeAdapter mAdapter;
+    private SwipeRefreshLayout swipeToRefresh;
     @Override
     public Loader<List<Earthquake>> onCreateLoader(int i, Bundle bundle) {
         // Create a new loader for the given URL
@@ -59,7 +62,7 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         Uri baseUri = Uri.parse(USGS_REQUEST_URL);
         Uri.Builder uriBuilder = baseUri.buildUpon();
         uriBuilder.appendQueryParameter("format", "geojson");
-        uriBuilder.appendQueryParameter("limit", "10");
+        uriBuilder.appendQueryParameter("limit", "30");
         uriBuilder.appendQueryParameter("minmag", minMag);
         uriBuilder.appendQueryParameter("orderby", orderBy);
         return new EarthquakeLoader(this, uriBuilder.toString());
@@ -87,6 +90,15 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
+        swipeToRefresh = (SwipeRefreshLayout)findViewById(R.id.refresh_view);
+        swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                initiateLoader();
+                swipeToRefresh.setRefreshing(false);
+            }
+        });
+
         ListView earthquakeListView = (ListView) findViewById(R.id.listview);
         mAdapter = new EarthquakeAdapter(this,new ArrayList<Earthquake>());
         // Create a new {@link ArrayAdapter} of earthquakes
@@ -95,13 +107,14 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         // Set the adapter on the {@link ListView}
 
         // so the list can be populated in the user interface
+
         earthquakeListView.setAdapter(mAdapter);
         mEmptyTextView = (TextView) findViewById(R.id.empty_view);
         earthquakeListView.setEmptyView(mEmptyTextView);
+
         /*EarthquakeAsyncTask task = new EarthquakeAsyncTask();
         task.execute(USGS_REQUEST_URL);*/
-        LoaderManager loaderManager = getLoaderManager();
-        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+        initiateLoader();
         earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -119,6 +132,15 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
             }
         });
 
+
+
+
+
+    }
+    public void initiateLoader()
+    {
+        LoaderManager loaderManager = getLoaderManager();
+        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
     }
 
     @Override
@@ -136,6 +158,11 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRefresh() {
+
     }
     /*private class EarthquakeAsyncTask extends AsyncTask<String, Void, List<Earthquake>>{
         @Override

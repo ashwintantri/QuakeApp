@@ -18,6 +18,10 @@ public class EarthquakeLoader extends AsyncTaskLoader<List<Earthquake>> {
         super(context);
         mUrl = url;
     }
+    public EarthquakeLoader(Context context)
+    {
+        super(context);
+    }
     @Override
     protected void onStartLoading() {
         forceLoad();
