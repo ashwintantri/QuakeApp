@@ -11,6 +11,8 @@
     android:layout_height="?android:attr/listPreferredItemHeight">
     <TextView
         android:id="@+id/magnitude"
+              android:text="We love 2002"
+              android:text="2002 error"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_gravity="center_vertical"
